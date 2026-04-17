@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react"
 import Image from "next/image"
 import {
   motion,
+  AnimatePresence,
   useMotionValue,
   useSpring,
   useTransform,
@@ -364,7 +365,7 @@ const DECK_IMAGES = ["/img-1.jpg", "/img-2.jpg", "/img-3.jpg", "/img-4.jpg"]
 
 function CardFlipDeck({ isActive }: SlideProps) {
   const [stack, setStack] = useState([0, 1, 2, 3])
-  const [animating, setAnimating] = useState(false)
+  const animating = useRef(false)
   const x = useMotionValue(0)
   const rotateZ = useTransform(x, [-300, 300], [-15, 15])
   const rotateY = useTransform(x, [-300, 300], [-25, 25])
@@ -378,38 +379,39 @@ function CardFlipDeck({ isActive }: SlideProps) {
   useEffect(() => {
     if (!isActive) {
       setStack([0, 1, 2, 3])
-      setAnimating(false)
+      animating.current = false
       x.jump(0)
     }
   }, [isActive, x])
 
   const handleDragEnd = useCallback(
     (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
-      if (animating || !isActive) return
+      if (animating.current || !isActive) return
       const threshold = 120
       const shouldDismiss =
         Math.abs(info.offset.x) > threshold || Math.abs(info.velocity.x) > 500
 
       if (shouldDismiss) {
-        setAnimating(true)
+        animating.current = true
         const dir = info.offset.x > 0 ? 1 : -1
         animate(x, dir * 1000, {
           type: "spring",
           stiffness: 200,
           damping: 30,
-        }).then(() => {
-          setStack((prev) => {
-            const [top, ...rest] = prev
-            return [...rest, top]
-          })
-          x.jump(0)
-          setAnimating(false)
+          onComplete: () => {
+            x.jump(0)
+            setStack((prev) => {
+              const [top, ...rest] = prev
+              return [...rest, top]
+            })
+            animating.current = false
+          },
         })
       } else {
         animate(x, 0, { type: "spring", stiffness: 300, damping: 25 })
       }
     },
-    [animating, isActive, x],
+    [isActive, x],
   )
 
   return (
@@ -490,20 +492,24 @@ function CardFlipDeck({ isActive }: SlideProps) {
 /* ═══════════════════════════════════════════════
    SLIDE 5 — Morphing Shape
    ═══════════════════════════════════════════════ */
+// All shapes use polygon() with exactly 10 points so CSS can interpolate between them
 const SHAPES = [
   {
     name: "CÍRCULO",
-    clipPath: "circle(50% at 50% 50%)",
+    clipPath:
+      "polygon(50% 0%, 79% 10%, 98% 35%, 98% 65%, 79% 90%, 50% 100%, 21% 90%, 2% 65%, 2% 35%, 21% 10%)",
     color: "#EAB308",
   },
   {
     name: "CUADRADO",
-    clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+    clipPath:
+      "polygon(0% 0%, 33% 0%, 67% 0%, 100% 0%, 100% 50%, 100% 100%, 67% 100%, 33% 100%, 0% 100%, 0% 50%)",
     color: "#FFFFFF",
   },
   {
     name: "TRIÁNGULO",
-    clipPath: "polygon(50% 0%, 100% 100%, 0% 100%)",
+    clipPath:
+      "polygon(50% 0%, 63% 25%, 75% 50%, 88% 75%, 100% 100%, 67% 100%, 33% 100%, 0% 100%, 17% 67%, 33% 33%)",
     color: "rgba(234,179,8,0.7)",
   },
   {
@@ -547,8 +553,11 @@ function MorphingShape({ isActive }: SlideProps) {
           }}
           style={{
             position: "absolute",
-            inset: 0,
+            left: 0,
+            right: 0,
             top: 20,
+            width: 300,
+            height: 300,
             opacity: 0.15,
           }}
         />
@@ -571,22 +580,24 @@ function MorphingShape({ isActive }: SlideProps) {
       </div>
 
       {/* Nombre de la forma */}
-      <motion.span
-        key={shape.name}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.4 }}
-        style={{
-          fontFamily: "var(--font-mont-alternates)",
-          fontWeight: 900,
-          fontSize: "1rem",
-          color: "#EAB308",
-          letterSpacing: "0.3em",
-        }}
-      >
-        {shape.name}
-      </motion.span>
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={shape.name}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.4 }}
+          style={{
+            fontFamily: "var(--font-mont-alternates)",
+            fontWeight: 900,
+            fontSize: "1rem",
+            color: "#EAB308",
+            letterSpacing: "0.3em",
+          }}
+        >
+          {shape.name}
+        </motion.span>
+      </AnimatePresence>
     </div>
   )
 }
