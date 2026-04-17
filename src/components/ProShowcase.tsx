@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback, startTransition } from "react"
 import Image from "next/image"
 import {
   motion,
@@ -8,7 +8,6 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
-  useAnimationControls,
   animate,
 } from "motion/react"
 
@@ -144,18 +143,6 @@ const CARD_LABELS = [
 ]
 
 function StaggerGrid({ isActive }: SlideProps) {
-  const controlsArr = useRef(
-    Array.from({ length: GRID_COLS * GRID_ROWS }, () => ({ x: 0, y: 0 })),
-  )
-  const [, forceRender] = useState(0)
-  const animControls = useRef(
-    Array.from({ length: GRID_COLS * GRID_ROWS }, () => useAnimationControls()),
-  )
-
-  // We need stable controls — create them once with a custom hook wrapper.
-  // Since hooks can't be called in a loop at runtime, we pre-create them via ref trick above
-  // but that causes a lint issue. Let's use a different approach: animate manually.
-
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
 
   const handleHoverStart = useCallback(
@@ -276,7 +263,7 @@ function LiquidProgress({ isActive }: SlideProps) {
   useEffect(() => {
     if (!isActive) {
       progress.jump(0)
-      setDisplayValue(0)
+      startTransition(() => setDisplayValue(0))
       return
     }
 
@@ -369,7 +356,7 @@ function ExpandingGallery({ isActive }: SlideProps) {
 
   useEffect(() => {
     if (!isActive) {
-      setExpanded(null)
+      startTransition(() => setExpanded(null))
     }
   }, [isActive])
 
@@ -560,7 +547,7 @@ function MorphingShape({ isActive }: SlideProps) {
 
   useEffect(() => {
     if (!isActive) {
-      setShapeIdx(0)
+      startTransition(() => setShapeIdx(0))
       return
     }
     const interval = setInterval(() => {
