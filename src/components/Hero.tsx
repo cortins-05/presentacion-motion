@@ -3,6 +3,7 @@
 import { motion } from "motion/react"
 import { FaReact, FaVuejs } from "react-icons/fa"
 import { IoLogoJavascript } from "react-icons/io5"
+import { Gift, Smile, Star } from "lucide-react"
 
 const TITLE = "MOTION"
 
@@ -10,6 +11,12 @@ const FRAMEWORKS = [
   { name: "React", icon: FaReact, color: "#61DAFB" },
   { name: "JavaScript", icon: IoLogoJavascript, color: "#F7DF1E" },
   { name: "Vue", icon: FaVuejs, color: "#42B883" },
+]
+
+const FEATURES = [
+  { label: "Gratis y\nopen-source", Icon: Gift },
+  { label: "Fácil\nde usar", Icon: Smile },
+  { label: "Ideal para\nLLMs", Icon: Star },
 ]
 
 export default function Hero() {
@@ -21,7 +28,7 @@ export default function Hero() {
       <div className="flex flex-col items-center gap-6 -mt-16">
 
         {/* Título con efecto typewriter letra a letra */}
-        <div className="flex">
+        <div className="flex mt-30">
           {TITLE.split("").map((char, i) => (
             <motion.span
               key={i}
@@ -99,6 +106,42 @@ export default function Hero() {
                 }}
               >
                 {fw.name}
+              </span>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Características destacadas */}
+        <motion.div
+          className="flex items-start justify-center gap-12 mt-12"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2.2, duration: 0.8, ease: "easeOut" }}
+        >
+          {FEATURES.map((feat, i) => (
+            <motion.div
+              key={feat.label}
+              className="flex flex-col items-center gap-2"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 2.2 + i * 0.15, duration: 0.5, ease: "easeOut" }}
+            >
+              <feat.Icon
+                size={22}
+                strokeWidth={1.5}
+                color="rgba(255,255,255,0.5)"
+              />
+              <span
+                className="text-center whitespace-pre-line"
+                style={{
+                  fontFamily: "var(--font-mont-alternates)",
+                  fontSize: "0.75rem",
+                  fontWeight: 400,
+                  color: "rgba(255,255,255,0.45)",
+                  lineHeight: 1.3,
+                }}
+              >
+                {feat.label}
               </span>
             </motion.div>
           ))}
