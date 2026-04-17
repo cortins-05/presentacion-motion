@@ -359,132 +359,167 @@ function LiquidProgress({ isActive }: SlideProps) {
 }
 
 /* ═══════════════════════════════════════════════
-   SLIDE 4 — 3D Card Flip Deck
+   SLIDE 4 — Expanding Gallery
    ═══════════════════════════════════════════════ */
-const DECK_IMAGES = ["/img-1.jpg", "/img-2.jpg", "/img-3.jpg", "/img-4.jpg"]
+const GALLERY_IMAGES = ["/img-1.jpg", "/img-2.jpg", "/img-3.jpg", "/img-4.jpg"]
+const GALLERY_LABELS = ["Landscape", "Nature", "Journey", "Wonder"]
 
-function CardFlipDeck({ isActive }: SlideProps) {
-  const [stack, setStack] = useState([0, 1, 2, 3])
-  const animating = useRef(false)
-  const x = useMotionValue(0)
-  const rotateZ = useTransform(x, [-300, 300], [-15, 15])
-  const rotateY = useTransform(x, [-300, 300], [-25, 25])
-  const shadow = useTransform(x, [-300, 0, 300], [
-    "8px 8px 30px rgba(234,179,8,0.3)",
-    "0px 4px 15px rgba(0,0,0,0.4)",
-    "-8px 8px 30px rgba(234,179,8,0.3)",
-  ])
+function ExpandingGallery({ isActive }: SlideProps) {
+  const [expanded, setExpanded] = useState<number | null>(null)
 
-  // Reset when becoming inactive
   useEffect(() => {
     if (!isActive) {
-      setStack([0, 1, 2, 3])
-      animating.current = false
-      x.jump(0)
+      setExpanded(null)
     }
-  }, [isActive, x])
-
-  const handleDragEnd = useCallback(
-    (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
-      if (animating.current || !isActive) return
-      const threshold = 120
-      const shouldDismiss =
-        Math.abs(info.offset.x) > threshold || Math.abs(info.velocity.x) > 500
-
-      if (shouldDismiss) {
-        animating.current = true
-        const dir = info.offset.x > 0 ? 1 : -1
-        animate(x, dir * 1000, {
-          type: "spring",
-          stiffness: 200,
-          damping: 30,
-          onComplete: () => {
-            x.jump(0)
-            setStack((prev) => {
-              const [top, ...rest] = prev
-              return [...rest, top]
-            })
-            animating.current = false
-          },
-        })
-      } else {
-        animate(x, 0, { type: "spring", stiffness: 300, damping: 25 })
-      }
-    },
-    [isActive, x],
-  )
+  }, [isActive])
 
   return (
-    <div className="flex h-full w-full items-center justify-center select-none">
-      <div style={{ position: "relative", width: 480, height: 300, transformStyle: "preserve-3d", perspective: 1000 }}>
-        {stack.map((cardIdx, stackPos) => {
-          const isTop = stackPos === 0
-          const offset = stackPos * 6
-          const scale = 1 - stackPos * 0.04
+    <div className="flex h-full w-full flex-col items-center justify-center gap-6 select-none">
+      <h2
+        style={{
+          fontFamily: "var(--font-mont-alternates)",
+          fontWeight: 800,
+          fontSize: "2rem",
+          color: "#fff",
+        }}
+      >
+        Gallery
+      </h2>
 
-          if (isTop) {
-            return (
-              <motion.div
-                key={`card-${cardIdx}`}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={1}
-                onDragStart={(e) => {
-                  e.stopPropagation()
-                }}
-                onDragEnd={handleDragEnd}
-                style={{
-                  x,
-                  rotateZ,
-                  rotateY,
-                  boxShadow: shadow,
-                  position: "absolute",
-                  width: 480,
-                  height: 300,
-                  borderRadius: 20,
-                  overflow: "hidden",
-                  cursor: "grab",
-                  zIndex: 10 - stackPos,
-                  top: offset,
-                }}
-              >
-                <Image
-                  src={DECK_IMAGES[cardIdx]}
-                  alt={`Card ${cardIdx + 1}`}
-                  fill
-                  style={{ objectFit: "cover" }}
-                  draggable={false}
-                />
-              </motion.div>
-            )
-          }
-
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          height: 340,
+          alignItems: "center",
+          perspective: 800,
+        }}
+      >
+        {GALLERY_IMAGES.map((src, i) => {
+          const isExpanded = expanded === i
           return (
             <motion.div
-              key={`card-${cardIdx}`}
-              initial={false}
-              animate={{ scale, y: offset }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              key={i}
+              onClick={() => setExpanded(isExpanded ? null : i)}
+              animate={{
+                width: isExpanded ? 420 : expanded !== null ? 80 : 180,
+                rotateY: isExpanded ? 0 : expanded !== null ? (i < expanded ? 8 : -8) : 0,
+                opacity: expanded !== null && !isExpanded ? 0.6 : 1,
+              }}
+              whileHover={expanded === null ? { scale: 1.04, y: -6 } : {}}
+              transition={{
+                type: "spring",
+                stiffness: 250,
+                damping: 28,
+              }}
               style={{
-                position: "absolute",
-                width: 480,
-                height: 300,
-                borderRadius: 20,
+                height: 340,
+                borderRadius: 16,
                 overflow: "hidden",
-                zIndex: 10 - stackPos,
+                cursor: "pointer",
+                position: "relative",
+                flexShrink: 0,
               }}
             >
               <Image
-                src={DECK_IMAGES[cardIdx]}
-                alt={`Card ${cardIdx + 1}`}
+                src={src}
+                alt={GALLERY_LABELS[i]}
                 fill
                 style={{ objectFit: "cover" }}
                 draggable={false}
               />
+              {/* Overlay gradient */}
+              <motion.div
+                animate={{
+                  opacity: isExpanded ? 1 : 0,
+                }}
+                transition={{ duration: 0.3 }}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)",
+                }}
+              />
+              {/* Label */}
+              <motion.div
+                animate={{
+                  opacity: isExpanded ? 1 : 0,
+                  y: isExpanded ? 0 : 20,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 25,
+                  delay: isExpanded ? 0.15 : 0,
+                }}
+                style={{
+                  position: "absolute",
+                  bottom: 20,
+                  left: 24,
+                  right: 24,
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "var(--font-mont-alternates)",
+                    fontWeight: 900,
+                    fontSize: "1.6rem",
+                    color: "#fff",
+                  }}
+                >
+                  {GALLERY_LABELS[i]}
+                </span>
+                <div
+                  style={{
+                    width: 40,
+                    height: 3,
+                    background: "#EAB308",
+                    borderRadius: 999,
+                    marginTop: 8,
+                  }}
+                />
+              </motion.div>
+              {/* Index badge */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: "rgba(0,0,0,0.5)",
+                  backdropFilter: "blur(4px)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "var(--font-mont-alternates)",
+                    fontWeight: 700,
+                    fontSize: "0.7rem",
+                    color: "#EAB308",
+                  }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
             </motion.div>
           )
         })}
       </div>
+
+      <p
+        style={{
+          fontFamily: "var(--font-mont-alternates)",
+          fontSize: "0.75rem",
+          color: "rgba(255,255,255,0.4)",
+        }}
+      >
+        Click to expand
+      </p>
     </div>
   )
 }
@@ -605,7 +640,7 @@ function MorphingShape({ isActive }: SlideProps) {
 /* ═══════════════════════════════════════════════
    COMPONENTE PRINCIPAL — ProShowcase (Carousel)
    ═══════════════════════════════════════════════ */
-const SLIDES = [MagneticCursor, StaggerGrid, LiquidProgress, CardFlipDeck, MorphingShape]
+const SLIDES = [MagneticCursor, StaggerGrid, LiquidProgress, ExpandingGallery, MorphingShape]
 const TOTAL = SLIDES.length
 
 export default function ProShowcase() {
