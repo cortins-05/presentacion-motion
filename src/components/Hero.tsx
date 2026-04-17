@@ -1,8 +1,16 @@
 "use client"
 
 import { motion } from "motion/react"
+import { FaReact, FaVuejs } from "react-icons/fa"
+import { IoLogoJavascript } from "react-icons/io5"
 
 const TITLE = "MOTION"
+
+const FRAMEWORKS = [
+  { name: "React", icon: FaReact, color: "#61DAFB" },
+  { name: "JavaScript", icon: IoLogoJavascript, color: "#F7DF1E" },
+  { name: "Vue", icon: FaVuejs, color: "#42B883" },
+]
 
 export default function Hero() {
   return (
@@ -59,6 +67,42 @@ export default function Hero() {
           producción, reduciendo complejidad sin renunciar a control ni
           rendimiento.
         </motion.p>
+
+        {/* Compatibilidad con frameworks */}
+        <motion.div
+          className="flex items-center gap-4 mt-4"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.8, duration: 0.8, ease: "easeOut" }}
+        >
+          {FRAMEWORKS.map((fw, i) => (
+            <motion.div
+              key={fw.name}
+              className="flex items-center gap-3 px-5 py-2.5 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-sm"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.8 + i * 0.15, duration: 0.5, ease: "easeOut" }}
+              whileHover={{
+                borderColor: fw.color + "40",
+                backgroundColor: fw.color + "08",
+                scale: 1.03,
+              }}
+              style={{ cursor: "default" }}
+            >
+              <fw.icon size={20} color={fw.color} />
+              <span
+                style={{
+                  fontFamily: "var(--font-mont-alternates)",
+                  fontSize: "0.85rem",
+                  fontWeight: 500,
+                  color: "rgba(255,255,255,0.8)",
+                }}
+              >
+                {fw.name}
+              </span>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
 
       {/* Indicador de scroll */}
