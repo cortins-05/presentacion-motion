@@ -602,41 +602,38 @@ export default function ProShowcase() {
   const trackX = useMotionValue(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
-  const [isAnimating, setIsAnimating] = useState(false)
+  const isAnimating = useRef(false)
 
   // Measure container
   useEffect(() => {
     const measure = () => {
       if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth)
+        const w = containerRef.current.offsetWidth
+        setContainerWidth(w)
+        // Re-sync track on resize
+        trackX.jump(-currentSlide * w)
       }
     }
     measure()
     window.addEventListener("resize", measure)
     return () => window.removeEventListener("resize", measure)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  // Sync track position when containerWidth changes
-  useEffect(() => {
-    if (containerWidth > 0) {
-      trackX.jump(-currentSlide * containerWidth)
-    }
-  }, [containerWidth, currentSlide, trackX])
 
   const goToSlide = useCallback(
     (slideIdx: number) => {
-      if (containerWidth === 0 || isAnimating) return
-      setIsAnimating(true)
+      if (containerWidth === 0 || isAnimating.current) return
+      isAnimating.current = true
       const target = -slideIdx * containerWidth
       animate(trackX, target, {
         type: "spring",
         stiffness: 300,
         damping: 35,
-        onComplete: () => setIsAnimating(false),
+        onComplete: () => { isAnimating.current = false },
       })
       setCurrentSlide(slideIdx)
     },
-    [containerWidth, trackX, isAnimating],
+    [containerWidth, trackX],
   )
 
   const goNext = useCallback(() => {
