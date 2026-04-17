@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback, type ReactNode } from "react"
-import { motion, AnimatePresence, useMotionValue, animate } from "motion/react"
+import { motion, useMotionValue, animate } from "motion/react"
 
 /* ═══════════════════════════════════════════════
    RESALTADO DE SINTAXIS (tokenizer)
@@ -398,66 +398,63 @@ function ExampleKeyframes({ isActive }: ExampleProps) {
   )
 }
 
-/* 5 — SALIDA  (AnimatePresence) */
-function ExampleExit({ isActive }: ExampleProps) {
-  const [isVisible, setIsVisible] = useState(true)
-
-  useEffect(() => {
-    if (isActive) setIsVisible(true)
-  }, [isActive])
+/* 5 — LAYOUT  (animación automática de layout) */
+function ExampleLayout() {
+  const [expanded, setExpanded] = useState(false)
 
   return (
     <div className="flex flex-col items-center gap-8">
-      <div className="flex items-center justify-center" style={{ width: 192, height: 192 }}>
-        <AnimatePresence mode="wait">
-          {isVisible && (
-            <motion.div
-              key="box"
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              className="flex items-center justify-center rounded-2xl"
-              style={{
-                width: 192,
-                height: 192,
-                background: "#EAB308",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "var(--font-mont-alternates)",
-                  fontWeight: 900,
-                  fontSize: "1.2rem",
-                  color: "#000",
-                  letterSpacing: "0.15em",
-                }}
-              >
-                ¡ADIÓS!
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      <motion.button
-        onClick={() => setIsVisible((v) => !v)}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <div
+        onClick={() => setExpanded((v) => !v)}
+        className="cursor-pointer"
         style={{
-          fontFamily: "var(--font-mont-alternates)",
-          fontWeight: 900,
-          fontSize: "0.85rem",
-          letterSpacing: "0.15em",
-          background: "#000",
-          color: "#EAB308",
-          border: "none",
-          padding: "12px 32px",
-          borderRadius: 999,
-          cursor: "pointer",
+          display: "flex",
+          alignItems: expanded ? "flex-end" : "flex-start",
+          justifyContent: expanded ? "flex-end" : "flex-start",
+          width: 240,
+          height: 240,
+          padding: 16,
+          borderRadius: 16,
+          background: "rgba(0,0,0,0.04)",
+          border: "1px dashed rgba(0,0,0,0.15)",
         }}
       >
-        ALTERNAR
-      </motion.button>
+        <motion.div
+          layout
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          className="flex items-center justify-center rounded-2xl"
+          style={{
+            width: expanded ? 160 : 80,
+            height: expanded ? 160 : 80,
+            background: "#EAB308",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+          }}
+        >
+          <motion.span
+            layout
+            style={{
+              fontFamily: "var(--font-mont-alternates)",
+              fontWeight: 900,
+              fontSize: expanded ? "1.2rem" : "0.7rem",
+              color: "#000",
+              letterSpacing: "0.15em",
+            }}
+          >
+            LAYOUT
+          </motion.span>
+        </motion.div>
+      </div>
+      <span
+        style={{
+          fontFamily: "var(--font-mont-alternates)",
+          fontWeight: 400,
+          fontSize: "0.7rem",
+          letterSpacing: "0.2em",
+          color: "rgba(0,0,0,0.4)",
+        }}
+      >
+        PULSA PARA ALTERNAR
+      </span>
     </div>
   )
 }
@@ -523,18 +520,21 @@ const SLIDES: SlideData[] = [
     Component: ExampleKeyframes,
   },
   {
-    title: "SALIDA",
-    instruction: "PULSA ALTERNAR →",
-    code: `<AnimatePresence mode="wait">
-  {isVisible && (
-    <motion.div
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0 }}
-    />
-  )}
-</AnimatePresence>`,
-    Component: ExampleExit,
+    title: "LAYOUT",
+    instruction: "PULSA LA CAJA →",
+    code: `// Motion anima el cambio de layout
+// automáticamente con la prop "layout"
+
+<motion.div
+  layout
+  transition={{
+    type: "spring",
+    stiffness: 500,
+    damping: 30
+  }}
+  style={{ width: expanded ? 160 : 80 }}
+/>`,
+    Component: ExampleLayout,
   },
 ]
 
