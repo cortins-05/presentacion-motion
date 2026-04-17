@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, type ReactNode } from "react"
 import { motion, AnimatePresence, useMotionValue, animate } from "motion/react"
 
 /* ═══════════════════════════════════════════════
-   SYNTAX HIGHLIGHTING (tokenizer)
+   RESALTADO DE SINTAXIS (tokenizer)
    ═══════════════════════════════════════════════ */
 
 type TokenType =
@@ -47,13 +47,13 @@ function tokenizeLine(line: string): Token[] {
       continue
     }
 
-    /* comment */
+    /* comentario */
     if (line[i] === "/" && line[i + 1] === "/") {
       tokens.push({ type: "comment", value: line.slice(i) })
       break
     }
 
-    /* double-quoted string */
+    /* cadena con comillas dobles */
     if (line[i] === '"') {
       let j = i + 1
       while (j < line.length && line[j] !== '"') {
@@ -65,7 +65,7 @@ function tokenizeLine(line: string): Token[] {
       continue
     }
 
-    /* single-quoted string */
+    /* cadena con comillas simples */
     if (line[i] === "'") {
       let j = i + 1
       while (j < line.length && line[j] !== "'") {
@@ -77,7 +77,7 @@ function tokenizeLine(line: string): Token[] {
       continue
     }
 
-    /* JSX tag  <Tag or </Tag */
+    /* etiqueta JSX  <Tag o </Tag */
     if (line[i] === "<" && i + 1 < line.length && /[A-Za-z/]/.test(line[i + 1])) {
       let j = i + 1
       if (line[j] === "/") j++
@@ -93,7 +93,7 @@ function tokenizeLine(line: string): Token[] {
       }
     }
 
-    /* number (including negative) */
+    /* número (incluidos negativos) */
     if (
       /\d/.test(line[i]) ||
       (line[i] === "-" && i + 1 < line.length && /\d/.test(line[i + 1]))
@@ -106,7 +106,7 @@ function tokenizeLine(line: string): Token[] {
       continue
     }
 
-    /* word */
+    /* palabra */
     if (/[a-zA-Z_$]/.test(line[i])) {
       let j = i
       while (j < line.length && /[\w$]/.test(line[j])) j++
@@ -122,7 +122,7 @@ function tokenizeLine(line: string): Token[] {
       continue
     }
 
-    /* fallback: single character */
+    /* fallback: carácter suelto */
     tokens.push({ type: "text", value: line[i] })
     i++
   }
@@ -164,7 +164,7 @@ function RenderTokens({ tokens }: { tokens: Token[] }) {
 }
 
 /* ═══════════════════════════════════════════════
-   CODE BLOCK PANEL
+   PANEL DE BLOQUE DE CÓDIGO
    ═══════════════════════════════════════════════ */
 
 function CodeBlock({ code, slideIndex }: { code: string; slideIndex: number }) {
@@ -181,7 +181,7 @@ function CodeBlock({ code, slideIndex }: { code: string; slideIndex: number }) {
         padding: "3rem 3.5rem",
       }}
     >
-      {/* Mac-style dots */}
+      {/* Puntos estilo Mac */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
         <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#FF5F56" }} />
         <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#FFBD2E" }} />
@@ -200,10 +200,10 @@ function CodeBlock({ code, slideIndex }: { code: string; slideIndex: number }) {
         </span>
       </div>
 
-      {/* separator */}
+      {/* separador */}
       <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 24 }} />
 
-      {/* code body */}
+      {/* cuerpo del código */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         <pre
           style={{
@@ -238,7 +238,7 @@ function CodeBlock({ code, slideIndex }: { code: string; slideIndex: number }) {
         </pre>
       </div>
 
-      {/* footer tag */}
+      {/* pie de página */}
       <div
         style={{
           textAlign: "right",
@@ -256,14 +256,14 @@ function CodeBlock({ code, slideIndex }: { code: string; slideIndex: number }) {
 }
 
 /* ═══════════════════════════════════════════════
-   5 EXAMPLES
+   5 EJEMPLOS
    ═══════════════════════════════════════════════ */
 
 interface ExampleProps {
   isActive: boolean
 }
 
-/* 1 — ANIMATE  (initial → animate) */
+/* 1 — ANIMAR  (initial → animate) */
 function ExampleAnimate({ isActive }: ExampleProps) {
   const [key, setKey] = useState(0)
   useEffect(() => {
@@ -293,7 +293,7 @@ function ExampleAnimate({ isActive }: ExampleProps) {
           letterSpacing: "0.15em",
         }}
       >
-        HELLO
+        HOLA
       </span>
     </motion.div>
   )
@@ -328,7 +328,7 @@ function ExampleHover() {
   )
 }
 
-/* 3 — DRAG */
+/* 3 — ARRASTRAR */
 function ExampleDrag() {
   return (
     <motion.div
@@ -352,13 +352,13 @@ function ExampleDrag() {
           letterSpacing: "0.15em",
         }}
       >
-        DRAG
+        ARRASTRA
       </span>
     </motion.div>
   )
 }
 
-/* 4 — KEYFRAMES  (array values + repeat) */
+/* 4 — KEYFRAMES  (valores en array + repetición) */
 function ExampleKeyframes({ isActive }: ExampleProps) {
   return (
     <motion.div
@@ -392,13 +392,13 @@ function ExampleKeyframes({ isActive }: ExampleProps) {
           letterSpacing: "0.15em",
         }}
       >
-        LOOP
+        BUCLE
       </span>
     </motion.div>
   )
 }
 
-/* 5 — EXIT  (AnimatePresence) */
+/* 5 — SALIDA  (AnimatePresence) */
 function ExampleExit({ isActive }: ExampleProps) {
   const [isVisible, setIsVisible] = useState(true)
 
@@ -433,7 +433,7 @@ function ExampleExit({ isActive }: ExampleProps) {
                   letterSpacing: "0.15em",
                 }}
               >
-                BYE!
+                ¡ADIÓS!
               </span>
             </motion.div>
           )}
@@ -456,14 +456,14 @@ function ExampleExit({ isActive }: ExampleProps) {
           cursor: "pointer",
         }}
       >
-        TOGGLE
+        ALTERNAR
       </motion.button>
     </div>
   )
 }
 
 /* ═══════════════════════════════════════════════
-   SLIDE DATA
+   DATOS DE LAS DIAPOSITIVAS
    ═══════════════════════════════════════════════ */
 
 interface SlideData {
@@ -475,8 +475,8 @@ interface SlideData {
 
 const SLIDES: SlideData[] = [
   {
-    title: "ANIMATE",
-    instruction: "WATCH THE ENTRANCE →",
+    title: "ANIMAR",
+    instruction: "OBSERVA LA ENTRADA →",
     code: `<motion.div
   initial={{ opacity: 0, y: 50 }}
   animate={{ opacity: 1, y: 0 }}
@@ -486,7 +486,7 @@ const SLIDES: SlideData[] = [
   },
   {
     title: "HOVER",
-    instruction: "HOVER OVER IT →",
+    instruction: "PASA EL RATÓN →",
     code: `<motion.div
   whileHover={{ scale: 1.2, rotate: 5 }}
   whileTap={{ scale: 0.9 }}
@@ -494,8 +494,8 @@ const SLIDES: SlideData[] = [
     Component: ExampleHover,
   },
   {
-    title: "DRAG",
-    instruction: "DRAG ME AROUND →",
+    title: "ARRASTRAR",
+    instruction: "ARRÁSTRALO →",
     code: `<motion.div
   drag
   dragConstraints={{
@@ -508,7 +508,7 @@ const SLIDES: SlideData[] = [
   },
   {
     title: "KEYFRAMES",
-    instruction: "WATCH THE LOOP →",
+    instruction: "OBSERVA EL BUCLE →",
     code: `<motion.div
   animate={{
     rotate: [0, 90, 180, 270, 360],
@@ -523,8 +523,8 @@ const SLIDES: SlideData[] = [
     Component: ExampleKeyframes,
   },
   {
-    title: "EXIT",
-    instruction: "CLICK TOGGLE →",
+    title: "SALIDA",
+    instruction: "PULSA ALTERNAR →",
     code: `<AnimatePresence mode="wait">
   {isVisible && (
     <motion.div
@@ -541,7 +541,7 @@ const SLIDES: SlideData[] = [
 const TOTAL = SLIDES.length
 
 /* ═══════════════════════════════════════════════
-   SLIDE LAYOUT  (left demo · right code)
+   LAYOUT DE DIAPOSITIVA  (demo izq. · código dcha.)
    ═══════════════════════════════════════════════ */
 
 function SlideLayout({
@@ -565,7 +565,7 @@ function SlideLayout({
       role="group"
       aria-label={`Slide ${index}: ${title}`}
     >
-      {/* ── Left half — Demo ── */}
+      {/* ── Mitad izquierda — Demo ── */}
       <div
         style={{
           width: "50%",
@@ -577,7 +577,7 @@ function SlideLayout({
           justifyContent: "center",
         }}
       >
-        {/* header: number + yellow line + title */}
+        {/* cabecera: número + línea amarilla + título */}
         <div style={{ position: "absolute", top: "2.5rem", left: "3rem" }}>
           <motion.div
             animate={isActive ? { x: 0, opacity: 1 } : { x: -30, opacity: 0 }}
@@ -618,7 +618,7 @@ function SlideLayout({
           </motion.div>
         </div>
 
-        {/* demo area (centered) */}
+        {/* área de demo (centrada) */}
         <motion.div
           animate={isActive ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
@@ -633,7 +633,7 @@ function SlideLayout({
           {children}
         </motion.div>
 
-        {/* footer instruction */}
+        {/* instrucción inferior */}
         <div
           style={{
             position: "absolute",
@@ -650,7 +650,7 @@ function SlideLayout({
         </div>
       </div>
 
-      {/* ── Right half — Code ── */}
+      {/* ── Mitad derecha — Código ── */}
       <motion.div
         animate={isActive ? { x: 0, opacity: 1 } : { x: 30, opacity: 0 }}
         transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
@@ -663,7 +663,7 @@ function SlideLayout({
 }
 
 /* ═══════════════════════════════════════════════
-   MAIN CAROUSEL  (same pattern as ProShowcase)
+   CARRUSEL PRINCIPAL  (mismo patrón que ProShowcase)
    ═══════════════════════════════════════════════ */
 
 export default function Lucas() {
@@ -673,7 +673,7 @@ export default function Lucas() {
   const [containerWidth, setContainerWidth] = useState(0)
   const isAnimating = useRef(false)
 
-  /* measure container */
+  /* medir contenedor */
   useEffect(() => {
     const measure = () => {
       if (containerRef.current) {
@@ -713,7 +713,7 @@ export default function Lucas() {
     goToSlide((currentSlide - 1 + TOTAL) % TOTAL)
   }, [currentSlide, goToSlide])
 
-  /* keyboard navigation */
+  /* navegación por teclado */
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") goNext()
@@ -731,7 +731,7 @@ export default function Lucas() {
       role="region"
       aria-roledescription="carousel"
     >
-      {/* Track */}
+      {/* Pista */}
       <motion.div
         style={{
           x: trackX,
@@ -757,7 +757,7 @@ export default function Lucas() {
         })}
       </motion.div>
 
-      {/* ◀ Prev button (on white side) */}
+      {/* ◀ Botón anterior (lado blanco) */}
       <motion.button
         onClick={goPrev}
         whileHover={{ scale: 1.15, backgroundColor: "rgba(234,179,8,0.25)" }}
@@ -787,7 +787,7 @@ export default function Lucas() {
         </svg>
       </motion.button>
 
-      {/* ▶ Next button (on dark side) */}
+      {/* ▶ Botón siguiente (lado oscuro) */}
       <motion.button
         onClick={goNext}
         whileHover={{ scale: 1.15, backgroundColor: "rgba(234,179,8,0.25)" }}
@@ -817,7 +817,7 @@ export default function Lucas() {
         </svg>
       </motion.button>
 
-      {/* Indicators (centered in left half) */}
+      {/* Indicadores (centrados en la mitad izquierda) */}
       <div
         style={{
           position: "absolute",
