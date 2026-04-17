@@ -602,7 +602,7 @@ export default function ProShowcase() {
   const trackX = useMotionValue(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
-  const isDragging = useRef(false)
+  const [isAnimating, setIsAnimating] = useState(false)
 
   // Measure container
   useEffect(() => {
@@ -616,73 +616,46 @@ export default function ProShowcase() {
     return () => window.removeEventListener("resize", measure)
   }, [])
 
-  // The track has TOTAL+2 slides: [clone-last, 0, 1, 2, 3, 4, clone-first]
-  // Index 0 in track = clone of last slide
-  // Indices 1..TOTAL = real slides
-  // Index TOTAL+1 = clone of first slide
-  const trackSlides = [SLIDES[TOTAL - 1], ...SLIDES, SLIDES[0]]
+  // Sync track position when containerWidth changes
+  useEffect(() => {
+    if (containerWidth > 0) {
+      trackX.jump(-currentSlide * containerWidth)
+    }
+  }, [containerWidth, currentSlide, trackX])
 
-  // Position for real slide i: -(i+1)*containerWidth
   const goToSlide = useCallback(
-    (slideIdx: number, instant?: boolean) => {
-      const target = -(slideIdx + 1) * containerWidth
-      if (instant) {
-        trackX.jump(target)
-      } else {
-        animate(trackX, target, {
-          type: "spring",
-          stiffness: 300,
-          damping: 35,
-        })
-      }
-      setCurrentSlide(slideIdx)
-    },
-    [containerWidth, trackX],
-  )
-
-  const handleDragEnd = useCallback(
-    (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
-      isDragging.current = false
-      if (containerWidth === 0) return
-
-      const currentX = trackX.get()
-      const swipeThreshold = containerWidth * 0.15
-      const velocityThreshold = 300
-
-      let direction = 0
-      if (info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold) {
-        direction = 1 // next
-      } else if (info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold) {
-        direction = -1 // prev
-      }
-
-      let newSlide = currentSlide + direction
-      // Clamp for now, handle loop after animation
-      const clampedSlide = newSlide
-      const target = -(clampedSlide + 1) * containerWidth
-
+    (slideIdx: number) => {
+      if (containerWidth === 0 || isAnimating) return
+      setIsAnimating(true)
+      const target = -slideIdx * containerWidth
       animate(trackX, target, {
         type: "spring",
         stiffness: 300,
         damping: 35,
-        onComplete: () => {
-          // Handle infinite loop repositioning
-          if (clampedSlide < 0) {
-            // Went to clone-last, jump to real last
-            trackX.jump(-(TOTAL) * containerWidth)
-            setCurrentSlide(TOTAL - 1)
-          } else if (clampedSlide >= TOTAL) {
-            // Went to clone-first, jump to real first
-            trackX.jump(-1 * containerWidth)
-            setCurrentSlide(0)
-          } else {
-            setCurrentSlide(clampedSlide)
-          }
-        },
+        onComplete: () => setIsAnimating(false),
       })
+      setCurrentSlide(slideIdx)
     },
-    [containerWidth, currentSlide, trackX],
+    [containerWidth, trackX, isAnimating],
   )
+
+  const goNext = useCallback(() => {
+    goToSlide((currentSlide + 1) % TOTAL)
+  }, [currentSlide, goToSlide])
+
+  const goPrev = useCallback(() => {
+    goToSlide((currentSlide - 1 + TOTAL) % TOTAL)
+  }, [currentSlide, goToSlide])
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") goNext()
+      else if (e.key === "ArrowLeft") goPrev()
+    }
+    window.addEventListener("keydown", handleKey)
+    return () => window.removeEventListener("keydown", handleKey)
+  }, [goNext, goPrev])
 
   return (
     <section
@@ -691,61 +664,111 @@ export default function ProShowcase() {
     >
       {/* Track */}
       <motion.div
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.1}
-        onDragStart={() => {
-          isDragging.current = true
-        }}
-        onDragEnd={handleDragEnd}
         style={{
           x: trackX,
           display: "flex",
-          width: `${(TOTAL + 2) * 100}vw`,
+          width: `${TOTAL * 100}vw`,
           height: "100%",
-          cursor: "grab",
         }}
       >
-        {trackSlides.map((SlideComponent, i) => {
-          // Real slide index: i-1 (since index 0 is clone of last)
-          const realIdx = i - 1
-          const isClone = i === 0 || i === TOTAL + 1
-          let activeIdx: number
-          if (i === 0) activeIdx = TOTAL - 1
-          else if (i === TOTAL + 1) activeIdx = 0
-          else activeIdx = realIdx
-
-          return (
-            <div
-              key={i}
-              style={{
-                width: "100vw",
-                height: "100%",
-                flexShrink: 0,
-              }}
-            >
-              <SlideComponent isActive={!isClone && activeIdx === currentSlide} />
-            </div>
-          )
-        })}
+        {SLIDES.map((SlideComponent, i) => (
+          <div
+            key={i}
+            style={{
+              width: "100vw",
+              height: "100%",
+              flexShrink: 0,
+            }}
+          >
+            <SlideComponent isActive={i === currentSlide} />
+          </div>
+        ))}
       </motion.div>
+
+      {/* Botón Anterior */}
+      <motion.button
+        onClick={goPrev}
+        whileHover={{ scale: 1.15, backgroundColor: "rgba(234,179,8,0.25)" }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        style={{
+          position: "absolute",
+          left: 24,
+          top: "50%",
+          translateY: "-50%",
+          width: 52,
+          height: 52,
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.08)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          backdropFilter: "blur(8px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          color: "#fff",
+        }}
+        aria-label="Slide anterior"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </motion.button>
+
+      {/* Botón Siguiente */}
+      <motion.button
+        onClick={goNext}
+        whileHover={{ scale: 1.15, backgroundColor: "rgba(234,179,8,0.25)" }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        style={{
+          position: "absolute",
+          right: 24,
+          top: "50%",
+          translateY: "-50%",
+          width: 52,
+          height: 52,
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.08)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          backdropFilter: "blur(8px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          color: "#fff",
+        }}
+        aria-label="Slide siguiente"
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </motion.button>
 
       {/* Indicators */}
       <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 gap-3">
         {SLIDES.map((_, i) => (
-          <motion.div
+          <motion.button
             key={i}
+            onClick={() => goToSlide(i)}
             animate={{
               scaleX: i === currentSlide ? 1.8 : 1,
               backgroundColor: i === currentSlide ? "#EAB308" : "rgba(255,255,255,0.3)",
             }}
+            whileHover={{
+              backgroundColor: i === currentSlide ? "#EAB308" : "rgba(255,255,255,0.5)",
+            }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
             style={{
               width: 24,
-              height: 2,
+              height: 4,
               borderRadius: 999,
               transformOrigin: "center",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
             }}
+            aria-label={`Ir a slide ${i + 1}`}
           />
         ))}
       </div>
